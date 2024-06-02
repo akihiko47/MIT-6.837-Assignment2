@@ -81,6 +81,8 @@ private:
 	Mesh m_mesh;
 
 	MatrixStack m_matrixStack;
+
+	void drawJointWithChildren(Joint* joint);
 };
 
 #endif

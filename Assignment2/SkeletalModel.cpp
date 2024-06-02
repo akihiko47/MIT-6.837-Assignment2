@@ -1,4 +1,5 @@
 #include "SkeletalModel.h"
+#include <fstream>
 
 #include <FL/Fl.H>
 
@@ -42,6 +43,40 @@ void SkeletalModel::draw(Matrix4f cameraMatrix, bool skeletonVisible)
 void SkeletalModel::loadSkeleton( const char* filename )
 {
 	// Load the skeleton from file here.
+
+	ifstream input;
+	input.open(filename);
+
+	if (!input.is_open()) {
+		throw std::runtime_error("Could not open file");
+	}
+
+	string line;
+	while (getline(input, line)) {
+		stringstream ss(line);
+		Joint* joint = new Joint;
+
+		float tx, ty, tz;
+		int parent;
+
+		ss >> tx >> ty >> tz >> parent;
+
+		Matrix4f transformMatrix = Matrix4f::identity();
+		transformMatrix(0, 3) = tx;
+		transformMatrix(1, 3) = ty;
+		transformMatrix(2, 3) = tz;
+		joint->transform = transformMatrix;
+
+		m_joints.push_back(joint);
+
+		if (parent == -1) {
+			m_rootJoint = joint;
+		} else {
+			m_joints[parent]->children.push_back(joint);
+		}
+	}
+
+	input.close();
 }
 
 void SkeletalModel::drawJoints( )
@@ -54,7 +89,25 @@ void SkeletalModel::drawJoints( )
 	// You are *not* permitted to use the OpenGL matrix stack commands
 	// (glPushMatrix, glPopMatrix, glMultMatrix).
 	// You should use your MatrixStack class
-	// and use glLoadMatrix() before your drawing call.
+	// and use glLoadMatrixf() before your drawing call.
+
+	drawJointWithChildren(m_rootJoint);
+}
+
+void SkeletalModel::drawJointWithChildren(Joint* joint) {
+
+	m_matrixStack.push(joint->transform);
+	glLoadMatrixf(m_matrixStack.top());
+	glutSolidSphere(0.025f, 12, 12);
+
+	if (joint->children.size() == 0) {
+		return;
+	} else {
+		for (int i = 0; i < joint->children.size(); i++) {
+			drawJointWithChildren(joint->children[i]);
+			m_matrixStack.pop();
+		}
+	}
 }
 
 void SkeletalModel::drawSkeleton( )
