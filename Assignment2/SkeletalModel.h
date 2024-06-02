@@ -83,6 +83,7 @@ private:
 	MatrixStack m_matrixStack;
 
 	void drawJointWithChildren(Joint* joint);
+	void drawBoneOfJointWithChildren(Joint* joint);
 };
 
 #endif
