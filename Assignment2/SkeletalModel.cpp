@@ -113,75 +113,64 @@ void SkeletalModel::drawJointWithChildren(Joint* joint) {
 }
 
 void SkeletalModel::drawSkeleton( )
-{
+{	
+	m_matrixStack.push(Matrix4f::translation(-m_rootJoint->transform.getCol(3).xyz()));
+
 	drawBoneOfJointWithChildren(m_rootJoint);
+
+	m_matrixStack.pop();
 }
 
 void SkeletalModel::drawBoneOfJointWithChildren(Joint* joint) {
 
-	if (joint->children.size() == 0) {
-		return;
-	} else {
-		for (int i = 0; i < joint->children.size(); i++) {
-			// initializing bone transformation matrix
-			Matrix4f boneTransform = joint->children[i]->transform;
+	m_matrixStack.push(joint->transform);
 
-			// new basis calculation
-			Vector3f rnd(0.0f, 0.0f, 1.0f);
-			Vector3f z = joint->children[i]->transform.getCol(3).xyz().normalized();
-			Vector3f y = Vector3f::cross(z, rnd).normalized();
-			Vector3f x = Vector3f::cross(y, z).normalized();
+	for (int i = 0; i < joint->children.size(); i++) {
+		// new basis calculation
+		Vector3f rnd(0.0f, 0.0f, 1.0f);
+		Vector3f z = joint->children[i]->transform.getCol(3).xyz().normalized();
+		Vector3f y = Vector3f::cross(z, rnd).normalized();
+		Vector3f x = Vector3f::cross(y, z).normalized();
 
-			// matrix translating coordinates to basis of bone
-			Matrix4f M = Matrix4f(
-				x[0], y[0], z[0], 0.0f,
-				x[1], y[1], z[1], 0.0f,
-				x[2], y[2], z[2], 0.0f,
-				0.0f, 0.0f, 0.0f, 1.0f
-			);
+		// matrix translating coordinates to basis of bone
+		Matrix4f M = Matrix4f(
+			x[0], y[0], z[0], 0.0f,
+			x[1], y[1], z[1], 0.0f,
+			x[2], y[2], z[2], 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
 
-			// length of bone
-			float l = joint->children[i]->transform.getCol(3).xyz().abs();
+		// length of bone
+		float l = joint->children[i]->transform.getCol(3).xyz().abs();
 
-			// change basis
-			boneTransform = boneTransform * M;
+		// change basis
+		m_matrixStack.push(M);
 
-			// scale
-			boneTransform = boneTransform * Matrix4f::scaling(0.025f, 0.025f, l);
+		// scale bone
+		m_matrixStack.push(Matrix4f::scaling(0.025f, 0.025f, l));
 
-			// translate froward to next joint
-			boneTransform = boneTransform * Matrix4f::translation(0.0f, 0.0f, -0.5f);
+		// translate froward to next joint
+		m_matrixStack.push(Matrix4f::translation(0.0f, 0.0f, 0.5f));
 
+		glLoadMatrixf(m_matrixStack.top());
+		glutSolidCube(1.0f);
+		m_matrixStack.pop();
+		m_matrixStack.pop();
+		m_matrixStack.pop();
 
-			// translate from origin
-			m_matrixStack.push(Matrix4f::translation(-m_rootJoint->transform.getCol(3).xyz()));
-
-			// apply joint transform
-			m_matrixStack.push(joint->transform);
-
-			// apply transformation to draw bone
-			m_matrixStack.push(boneTransform);
-
-			glLoadMatrixf(m_matrixStack.top());
-			glutSolidCube(1.0f);
-			m_matrixStack.pop();
-			m_matrixStack.pop();
-			m_matrixStack.pop();
-
-			m_matrixStack.push(joint->transform);
-			drawBoneOfJointWithChildren(joint->children[i]);
-			m_matrixStack.pop();
-		}
+		drawBoneOfJointWithChildren(joint->children[i]);
 	}
+	
+	m_matrixStack.pop();
 }
 
 void SkeletalModel::setJointTransform(int jointIndex, float rX, float rY, float rZ)
 {
 	Matrix4f Rx = Matrix4f::rotateX(rX);
-	Matrix4f Ry = Matrix4f::rotateX(rY);
-	Matrix4f Rz = Matrix4f::rotateX(rZ);
+	Matrix4f Ry = Matrix4f::rotateY(rY);
+	Matrix4f Rz = Matrix4f::rotateZ(rZ);
 
-	Matrix4f Rot = Rx * Ry * Rz;
+	Matrix4f Rot = Rz * Ry * Rx;
 
 	m_joints[jointIndex]->transform.setSubmatrix3x3(0, 0, Rot.getSubmatrix3x3(0, 0));
 }
