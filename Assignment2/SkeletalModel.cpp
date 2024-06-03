@@ -105,7 +105,7 @@ void SkeletalModel::drawJointWithChildren(Joint* joint) {
 	if (joint->children.size() == 0) {
 		return;
 	} else {
-		for (int i = 0; i < joint->children.size(); i++) {
+		for (unsigned i = 0; i < joint->children.size(); i++) {
 			drawJointWithChildren(joint->children[i]);
 			m_matrixStack.pop();
 		}
@@ -122,46 +122,45 @@ void SkeletalModel::drawSkeleton( )
 }
 
 void SkeletalModel::drawBoneOfJointWithChildren(Joint* joint) {
+	if (joint->children.size() != 0) {
+		m_matrixStack.push(joint->transform);
+		for (unsigned i = 0; i < joint->children.size(); i++) {
+			// new basis calculation
+			Vector3f rnd(0.0f, 0.0f, 1.0f);
+			Vector3f z = joint->children[i]->transform.getCol(3).xyz().normalized();
+			Vector3f y = Vector3f::cross(z, rnd).normalized();
+			Vector3f x = Vector3f::cross(y, z).normalized();
 
-	m_matrixStack.push(joint->transform);
+			// matrix translating coordinates to basis of bone
+			Matrix4f M = Matrix4f(
+				x[0], y[0], z[0], 0.0f,
+				x[1], y[1], z[1], 0.0f,
+				x[2], y[2], z[2], 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			);
 
-	for (int i = 0; i < joint->children.size(); i++) {
-		// new basis calculation
-		Vector3f rnd(0.0f, 0.0f, 1.0f);
-		Vector3f z = joint->children[i]->transform.getCol(3).xyz().normalized();
-		Vector3f y = Vector3f::cross(z, rnd).normalized();
-		Vector3f x = Vector3f::cross(y, z).normalized();
+			// length of bone
+			float l = joint->children[i]->transform.getCol(3).xyz().abs();
 
-		// matrix translating coordinates to basis of bone
-		Matrix4f M = Matrix4f(
-			x[0], y[0], z[0], 0.0f,
-			x[1], y[1], z[1], 0.0f,
-			x[2], y[2], z[2], 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		);
+			// change basis
+			m_matrixStack.push(M);
 
-		// length of bone
-		float l = joint->children[i]->transform.getCol(3).xyz().abs();
+			// scale bone
+			m_matrixStack.push(Matrix4f::scaling(0.025f, 0.025f, l));
 
-		// change basis
-		m_matrixStack.push(M);
+			// translate froward to next joint
+			m_matrixStack.push(Matrix4f::translation(0.0f, 0.0f, 0.5f));
 
-		// scale bone
-		m_matrixStack.push(Matrix4f::scaling(0.025f, 0.025f, l));
+			glLoadMatrixf(m_matrixStack.top());
+			glutSolidCube(1.0f);
+			m_matrixStack.pop();
+			m_matrixStack.pop();
+			m_matrixStack.pop();
 
-		// translate froward to next joint
-		m_matrixStack.push(Matrix4f::translation(0.0f, 0.0f, 0.5f));
-
-		glLoadMatrixf(m_matrixStack.top());
-		glutSolidCube(1.0f);
+			drawBoneOfJointWithChildren(joint->children[i]);
+		}
 		m_matrixStack.pop();
-		m_matrixStack.pop();
-		m_matrixStack.pop();
-
-		drawBoneOfJointWithChildren(joint->children[i]);
 	}
-	
-	m_matrixStack.pop();
 }
 
 void SkeletalModel::setJointTransform(int jointIndex, float rX, float rY, float rZ)
