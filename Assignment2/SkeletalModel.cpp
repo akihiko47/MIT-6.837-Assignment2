@@ -1,6 +1,8 @@
 #include "SkeletalModel.h"
 #include <fstream>
 
+#define PI 3.14159265359
+
 #include <FL/Fl.H>
 
 using namespace std;
@@ -122,7 +124,7 @@ void SkeletalModel::drawBoneOfJointWithChildren(Joint* joint) {
 	} else {
 		for (int i = 0; i < joint->children.size(); i++) {
 			// initializing bone transformation matrix
-			Matrix4f boneTransform = Matrix4f::identity();
+			Matrix4f boneTransform = joint->children[i]->transform;
 
 			// new basis calculation
 			Vector3f rnd(0.0f, 0.0f, 1.0f);
@@ -141,9 +143,6 @@ void SkeletalModel::drawBoneOfJointWithChildren(Joint* joint) {
 			// length of bone
 			float l = joint->children[i]->transform.getCol(3).xyz().abs();
 
-			// translate from origin
-			boneTransform = boneTransform * Matrix4f::translation(-m_rootJoint->transform.getCol(3).xyz());
-
 			// change basis
 			boneTransform = boneTransform * M;
 
@@ -151,14 +150,25 @@ void SkeletalModel::drawBoneOfJointWithChildren(Joint* joint) {
 			boneTransform = boneTransform * Matrix4f::scaling(0.025f, 0.025f, l);
 
 			// translate froward to next joint
-			boneTransform = boneTransform * Matrix4f::translation(0.0f, 0.0f, 0.5f);
+			boneTransform = boneTransform * Matrix4f::translation(0.0f, 0.0f, -0.5f);
 
+
+			// translate from origin
+			m_matrixStack.push(Matrix4f::translation(-m_rootJoint->transform.getCol(3).xyz()));
+
+			// apply joint transform
 			m_matrixStack.push(joint->transform);
+
+			// apply transformation to draw bone
 			m_matrixStack.push(boneTransform);
+
 			glLoadMatrixf(m_matrixStack.top());
 			glutSolidCube(1.0f);
 			m_matrixStack.pop();
+			m_matrixStack.pop();
+			m_matrixStack.pop();
 
+			m_matrixStack.push(joint->transform);
 			drawBoneOfJointWithChildren(joint->children[i]);
 			m_matrixStack.pop();
 		}
@@ -167,7 +177,13 @@ void SkeletalModel::drawBoneOfJointWithChildren(Joint* joint) {
 
 void SkeletalModel::setJointTransform(int jointIndex, float rX, float rY, float rZ)
 {
-	// Set the rotation part of the joint's transformation matrix based on the passed in Euler angles.
+	Matrix4f Rx = Matrix4f::rotateX(rX);
+	Matrix4f Ry = Matrix4f::rotateX(rY);
+	Matrix4f Rz = Matrix4f::rotateX(rZ);
+
+	Matrix4f Rot = Rx * Ry * Rz;
+
+	m_joints[jointIndex]->transform.setSubmatrix3x3(0, 0, Rot.getSubmatrix3x3(0, 0));
 }
 
 
