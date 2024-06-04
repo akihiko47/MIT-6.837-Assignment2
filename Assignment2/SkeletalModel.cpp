@@ -174,6 +174,17 @@ void SkeletalModel::setJointTransform(int jointIndex, float rX, float rY, float 
 	m_joints[jointIndex]->transform.setSubmatrix3x3(0, 0, Rot.getSubmatrix3x3(0, 0));
 }
 
+void SkeletalModel::computeBWithChildren(Joint* parent) {
+	m_matrixStack.push(parent->transform);
+
+	parent->bindWorldToJointTransform = m_matrixStack.top().inverse();
+
+	for (unsigned i = 0; i < parent->children.size(); i++) {
+		computeBWithChildren(parent->children[i]);
+	}
+
+	m_matrixStack.pop();
+}
 
 void SkeletalModel::computeBindWorldToJointTransforms()
 {
@@ -185,18 +196,26 @@ void SkeletalModel::computeBindWorldToJointTransforms()
 	//
 	// This method should update each joint's bindWorldToJointTransform.
 	// You will need to add a recursive helper function to traverse the joint hierarchy.
+	m_matrixStack.clear();
+	computeBWithChildren(m_rootJoint);
+}
+
+void SkeletalModel::computeTWithChildren(Joint* parent) {
+	m_matrixStack.push(parent->transform);
+
+	parent->currentJointToWorldTransform = m_matrixStack.top();
+
+	for (unsigned i = 0; i < parent->children.size(); i++) {
+		computeTWithChildren(parent->children[i]);
+	}
+
+	m_matrixStack.pop();
 }
 
 void SkeletalModel::updateCurrentJointToWorldTransforms()
 {
-	// 2.3.2. Implement this method to compute a per-joint transform from
-	// joint space to world space in the CURRENT POSE.
-	//
-	// The current pose is defined by the rotations you've applied to the
-	// joints and hence needs to be *updated* every time the joint angles change.
-	//
-	// This method should update each joint's bindWorldToJointTransform.
-	// You will need to add a recursive helper function to traverse the joint hierarchy.
+	m_matrixStack.clear();
+	computeTWithChildren(m_rootJoint);
 }
 
 void SkeletalModel::updateMesh()
@@ -206,5 +225,19 @@ void SkeletalModel::updateMesh()
 	// given the current state of the skeleton.
 	// You will need both the bind pose world --> joint transforms.
 	// and the current joint --> world transforms.
+
+	for (int i = 0; i < m_mesh.currentVertices.size(); i++) {
+
+		Vector4f p(m_mesh.bindVertices[i][0], m_mesh.bindVertices[i][1], m_mesh.bindVertices[i][2], 1.0f);
+
+		Vector4f p_new;
+		for (int j = 0; j < m_joints.size() - 1; j++) {
+			if (m_mesh.attachments[i][j] > 0.0f) {
+				p_new = p_new + (m_mesh.attachments[i][j] * (m_joints[j + 1]->currentJointToWorldTransform * m_joints[j + 1]->bindWorldToJointTransform * p));
+			}
+		}
+
+		m_mesh.currentVertices[i] = p_new.xyz();
+	}
 }
 

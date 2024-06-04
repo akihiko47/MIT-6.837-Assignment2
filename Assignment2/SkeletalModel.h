@@ -84,6 +84,9 @@ private:
 
 	void drawJointWithChildren(Joint* joint);
 	void drawBoneOfJointWithChildren(Joint* joint);
+
+	void computeBWithChildren(Joint* parent);
+	void computeTWithChildren(Joint* parent);
 };
 
 #endif
