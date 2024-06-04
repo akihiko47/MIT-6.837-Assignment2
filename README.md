@@ -10,9 +10,9 @@ I haven't done any additional tasks, but I plan to do more in my own implementat
 
 I learned quite a lot from this assignment, it was interesting to learn that normals can be generated on the fly using cross product, but thats just a small part. Justin Solomon lectures are really intersting. Thanks to him for making them public 😘.
 
-![skel1](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/main/Images/skel1.jpg)
-![mesh1](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/main/Images/mesh1.jpg)
-![skel2](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/main/Images/skel2.jpg)
-![mesh2](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/main/Images/mesh2.jpg)
-![skel3](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/main/Images/skel3.jpg)
-![mesh3](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/main/Images/mesh3.jpg)
+![skel1](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/master/Images/skel1.jpg)
+![mesh1](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/master/Images/mesh1.jpg)
+![skel2](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/master/Images/skel2.jpg)
+![mesh2](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/master/Images/mesh2.jpg)
+![skel3](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/master/Images/skel3.jpg)
+![mesh3](https://github.com/akihiko47/MIT-6.837-Assignment2/blob/master/Images/mesh3.jpg)
