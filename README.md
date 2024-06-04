@@ -1,5 +1,6 @@
 # Hierarchical Modeling and Skeletal Subspace Deformation
 I made starter code work on my computer using [this video](https://www.youtube.com/watch?v=nPl5mThO9so&ab_channel=MetaphysicsComputing).
+This code should work on any Windows PC (maybe).
 
 I haven't done any additional tasks, but I plan to do more in my own implementation with a more modern API.
 
